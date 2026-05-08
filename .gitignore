@@ -1,0 +1,11 @@
+/dist
+/package
+/node_modules
+*.swp
+/.idea
+/.vscode
+*.zip
+/auto-imports.d.ts
+/components.d.ts
+.env
+.env.local

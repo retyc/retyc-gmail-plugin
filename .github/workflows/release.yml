@@ -1,0 +1,114 @@
+name: Release
+
+on:
+  push:
+    # Plain SemVer tags (1.0.0). The `v`-prefixed form (v1.0.0) also matches.
+    tags: ['*.*.*']
+
+jobs:
+  ci:
+    name: CI
+    uses: ./.github/workflows/_ci.yml
+
+  release-artifacts:
+    name: Build & attach artifacts
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    outputs:
+      archive: ${{ steps.pkg.outputs.archive }}
+
+    steps:
+      # Minimal checkout: needed for package.json (version read) and scripts/package-zip.js.
+      # We deliberately skip `npm ci` and `npm run build` — the dist/ artifact produced by
+      # the `ci` job is downloaded below, and `scripts/package-zip.js` only relies on Node
+      # built-ins plus the system `zip` (preinstalled on ubuntu-latest).
+      - uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Download dist artifact from CI
+        uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist
+
+      - name: Check tag matches package.json version
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          TAG_VERSION="${TAG#v}"
+          if [ "$TAG_VERSION" != "$PACKAGE_VERSION" ]; then
+            echo "::error::Tag '$TAG' does not match package.json version '$PACKAGE_VERSION'"
+            exit 1
+          fi
+          echo "VERSION=${TAG_VERSION}" >> "$GITHUB_ENV"
+
+      - name: Package
+        id: pkg
+        run: |
+          npm run package
+          echo "archive=package/retyc-gmail-plugin-${VERSION}.zip" >> "$GITHUB_OUTPUT"
+
+      - name: Upload archive artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: extension-zip
+          path: ${{ steps.pkg.outputs.archive }}
+
+      - name: Create / update GitHub Release with artifact
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: ${{ steps.pkg.outputs.archive }}
+
+  # Single matrixed publish job: one shard per target store. Each shard runs only if
+  # its corresponding `PUBLISH_<STORE>` repository variable is set to 'true' AND configures
+  # the matching secrets:
+  #   - chrome:  CHROME_EXTENSION_ID / CHROME_CLIENT_ID / CHROME_CLIENT_SECRET / CHROME_REFRESH_TOKEN
+  #   - firefox: FIREFOX_API_KEY / FIREFOX_API_SECRET (UUID from manifest.config.ts: browser_specific_settings.gecko.id)
+  publish:
+    name: Publish (${{ matrix.target }})
+    needs: release-artifacts
+    runs-on: ubuntu-latest
+    if: ${{ vars.PUBLISH_CHROME == 'true' || vars.PUBLISH_FIREFOX == 'true' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [chrome, firefox]
+
+    steps:
+      - name: Download archive
+        if: |
+          (matrix.target == 'chrome'  && vars.PUBLISH_CHROME  == 'true') ||
+          (matrix.target == 'firefox' && vars.PUBLISH_FIREFOX == 'true')
+        uses: actions/download-artifact@v8
+        with:
+          name: extension-zip
+
+      - name: Upload to Chrome Web Store
+        if: ${{ matrix.target == 'chrome' && vars.PUBLISH_CHROME == 'true' }}
+        uses: cardinalby/webext-buildtools-chrome-webstore-upload-action@1.0.11
+        with:
+          zipFilePath: ${{ needs.release-artifacts.outputs.archive }}
+          extensionId: ${{ secrets.CHROME_EXTENSION_ID }}
+          apiClientId: ${{ secrets.CHROME_CLIENT_ID }}
+          apiClientSecret: ${{ secrets.CHROME_CLIENT_SECRET }}
+          apiRefreshToken: ${{ secrets.CHROME_REFRESH_TOKEN }}
+
+      - name: Upload to Firefox Add-ons (AMO)
+        if: ${{ matrix.target == 'firefox' && vars.PUBLISH_FIREFOX == 'true' }}
+        uses: browser-actions/release-firefox-addon@v0.2.1
+        with:
+          addon-id: retyc-gmail@retyc.com
+          addon-path: ${{ needs.release-artifacts.outputs.archive }}
+          auth-api-issuer: ${{ secrets.FIREFOX_API_KEY }}
+          auth-api-secret: ${{ secrets.FIREFOX_API_SECRET }}

@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+    paths: &code_paths
+      - 'src/**'
+      - 'public/**'
+      - 'manifest.config.ts'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - 'tsconfig.node.json'
+      - 'vite.config.mts'
+      - 'eslint.config.mjs'
+      - '.nvmrc'
+      - 'scripts/**'
+      - '.github/workflows/**'
+  pull_request:
+    paths: *code_paths
+
+jobs:
+  ci:
+    name: CI
+    uses: ./.github/workflows/_ci.yml

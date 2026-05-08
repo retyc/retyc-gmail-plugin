@@ -1,0 +1,28 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+@theme static {
+    --color-cornflower-blue-50: #f0f5fe;
+    --color-cornflower-blue-100: #dde8fc;
+    --color-cornflower-blue-200: #c2d8fb;
+    --color-cornflower-blue-300: #99c0f7;
+    --color-cornflower-blue-400: #619af1;
+    --color-cornflower-blue-500: #457bec;
+    --color-cornflower-blue-600: #305ee0;
+    --color-cornflower-blue-700: #274ace;
+    --color-cornflower-blue-800: #263da7;
+    --color-cornflower-blue-900: #243884;
+    --color-cornflower-blue-950: #1a2451;
+
+    --color-jacaranda-50: #f9e1f9;
+    --color-jacaranda-100: #f2bff2;
+    --color-jacaranda-200: #e684e6;
+    --color-jacaranda-300: #d945d9;
+    --color-jacaranda-400: #ae23ae;
+    --color-jacaranda-500: #6e166e;
+    --color-jacaranda-600: #310a31;
+    --color-jacaranda-700: #260826;
+    --color-jacaranda-800: #190519;
+    --color-jacaranda-900: #0d030d;
+    --color-jacaranda-950: #040104;
+}

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Retyc</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+        }
+        #splash {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 240px;
+        }
+
+        #splash img {
+            animation: retyc-spin 1.8s linear infinite;
+        }
+
+        #splash p {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        @keyframes retyc-spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body class="isolate">
+<div id="app">
+    <div id="splash">
+        <img src="/assets/icon-80.png" width="80" height="80" alt=""/>
+        <p>Loading Retyc…</p>
+    </div>
+</div>
+<script type="module" src="./main.ts"></script>
+</body>
+</html>
