@@ -73,7 +73,7 @@ export default defineManifest({
 
   browser_specific_settings: {
     gecko: {
-      id: 'retyc-gmail@retyc.com',
+      id: 'retyc-for-gmail@retyc.com',
       strict_min_version: '140.0',
       data_collection_permissions: {
         required: ['none'],
