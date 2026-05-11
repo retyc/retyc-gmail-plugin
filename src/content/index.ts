@@ -323,8 +323,8 @@ function createPanel(mode: 'compose' | 'settings'): PanelHandle {
   Object.assign(backdrop.style, {
     position: 'fixed',
     inset: '0',
-    background: 'rgba(15, 23, 42, 0.45)',
-    backdropFilter: 'blur(2px)',
+    background: 'rgba(15, 23, 42, 0.25)',
+    backdropFilter: 'blur(7px)',
     zIndex: '2147483645',
     opacity: '0',
     transition: `opacity ${String(ANIM_MS)}ms ease`,
