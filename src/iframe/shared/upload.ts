@@ -163,10 +163,9 @@ export async function performRetycTransfer(
   return {transferUrl}
 }
 
-export function isAuthError(message: string): boolean {
-  return (
-    message.toLowerCase().includes('refresh token') ||
-    message.toLowerCase().includes('log in again') ||
-    (/\b401\b/.test(message) && message.toLowerCase().includes('auth'))
-  )
+// True when the SDK reports there is no usable session (never logged in, or refresh token
+// rejected). Async so the SDK chunk stays lazily loaded.
+export async function isAuthError(e: unknown): Promise<boolean> {
+  const {RetycAuthError} = await import('@retyc/sdk')
+  return e instanceof RetycAuthError
 }

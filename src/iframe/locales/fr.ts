@@ -14,6 +14,7 @@ export default {
     openSignInPage: 'Ouvrir la page de connexion',
     waiting: 'En attente de confirmation…',
     cancel: 'Annuler',
+    accountUnavailable: 'Impossible de détecter le compte Gmail courant. Rechargez Gmail puis réessayez.',
   },
   transfer: {
     openComposeHint: 'Ouvrez une fenêtre de rédaction pour transférer des fichiers.',

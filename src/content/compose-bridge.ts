@@ -25,6 +25,9 @@ interface ComposeBridgeOptions {
   composeView: ComposeView | null
   iframe: HTMLIFrameElement
   iframeOrigin: string  // chrome-extension://<id>
+  // Email of the Gmail account this tab is signed into (InboxSDK `User.getEmailAddress()`), or ''
+  // when unknown. The iframe uses it to namespace its token store per account.
+  getAccountEmail: () => string
   // Called when the bridge is torn down (compose closed): the host should remove the iframe.
   onClose: () => void
   // Called when the iframe asks to be hidden (user clicked the in-iframe close button).
@@ -43,6 +46,7 @@ export class ComposeBridge {
   private readonly composeView: ComposeView | null
   private readonly iframe: HTMLIFrameElement
   private readonly iframeOrigin: string
+  private readonly getAccountEmail: () => string
   private readonly onClose: () => void
   private readonly onCloseRequest: (() => void) | null
   private readonly onContentHeight: ((h: number) => void) | null
@@ -56,6 +60,7 @@ export class ComposeBridge {
     this.composeView = opts.composeView
     this.iframe = opts.iframe
     this.iframeOrigin = opts.iframeOrigin
+    this.getAccountEmail = opts.getAccountEmail
     this.onClose = opts.onClose
     this.onCloseRequest = opts.onCloseRequest ?? null
     this.onContentHeight = opts.onContentHeight ?? null
@@ -206,9 +211,11 @@ export class ComposeBridge {
     insertHtmlIntoBody(bodyEl, payload.html, payload.idempotencyKey)
   }
 
+  // The Gmail account, not the compose's From contact: a "send mail as" alias must not change
+  // the answer, since the iframe keys its token store on it.
   private getCurrentUserEmail(): string {
-    const from = this.composeView?.getFromContact?.()
-    if (from?.emailAddress) return from.emailAddress
+    const account = this.getAccountEmail()
+    if (account) return account
     const meLink = document.querySelector<HTMLLinkElement>('link[rel="me"][href^="mailto:"]')
     if (meLink) return meLink.href.replace(/^mailto:/, '')
     return ''

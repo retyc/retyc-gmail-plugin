@@ -14,6 +14,7 @@ export default {
     openSignInPage: 'Open sign-in page',
     waiting: 'Waiting for confirmation…',
     cancel: 'Cancel',
+    accountUnavailable: 'Could not detect the current Gmail account. Reload Gmail and try again.',
   },
   transfer: {
     openComposeHint: 'Open a compose window to transfer files.',

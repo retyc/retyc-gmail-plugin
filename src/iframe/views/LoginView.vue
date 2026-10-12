@@ -25,7 +25,15 @@ async function onLogin() {
     </div>
 
     <div v-else-if="auth.authState.value === 'unauthenticated'" class="flex flex-col items-center gap-4">
-      <UButton id="btn-login" size="lg" color="primary" icon="i-lucide-log-in" @click="onLogin">
+      <UAlert
+          v-if="!auth.accountAvailable"
+          color="warning" variant="soft" icon="i-lucide-triangle-alert"
+          :description="t('login.accountUnavailable')"
+      />
+      <UButton
+          id="btn-login" size="lg" color="primary" icon="i-lucide-log-in"
+          :disabled="!auth.accountAvailable" @click="onLogin"
+      >
         {{ t('login.button') }}
       </UButton>
       <USeparator/>
