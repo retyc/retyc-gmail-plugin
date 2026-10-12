@@ -7,6 +7,7 @@ import App from './App.vue'
 import {i18n, setLocale, detectInitialLocale} from './i18n'
 import {getBridge} from '@bridge/client'
 import {modeInjectionKey, readModeFromUrl} from './composables/useMode'
+import {setAccountEmail} from './shared/account'
 import './assets/custom.css'
 
 // Register only the ~50 Lucide icons actually used (app + @nuxt/ui defaults) so the CSP-blocked
@@ -29,6 +30,8 @@ async function bootstrap(): Promise<void> {
   // before issuing any cross-frame call (otherwise getLocale() etc. race the listener).
   await bridge.handshake()
   setLocale(await detectInitialLocale(bridge))
+  // Must be set before the app mounts: the token store is keyed by Gmail account.
+  setAccountEmail(await bridge.getCurrentUserEmail().catch(() => ''))
 
   const mode = readModeFromUrl()
   createApp(App)

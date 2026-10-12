@@ -1,11 +1,13 @@
 import browser from 'webextension-polyfill'
-import {STORAGE_KEY_TOKENS} from './constants'
+import {getTokenStorageKey} from './account'
 
 // Cross-iframe auth state synchronization.
 //
 // Each Gmail compose opens its own iframe with its own Vue app and its own `useAuth()`
 // instance. The OIDC tokens live in `browser.storage.local`, which is the single source of
-// truth shared across all iframes of this extension. When iframe A logs out, the storage
+// truth shared across all iframes of this extension. They are keyed per Gmail account, and we
+// only react to changes of the current account's key: a login/logout on /mail/u/1 must not
+// affect the iframes of /mail/u/0. When iframe A logs out, the storage
 // entry is cleared — but iframe B's `authState` ref is local and would still report
 // `authenticated` until we tell it otherwise.
 //
@@ -43,8 +45,9 @@ function handleStorageChanged(
   changes: Record<string, browser.Storage.StorageChange>,
   area: string,
 ): void {
-  if (area !== 'local' || !(STORAGE_KEY_TOKENS in changes)) return
-  const {newValue} = changes[STORAGE_KEY_TOKENS]
+  const key = getTokenStorageKey()
+  if (area !== 'local' || !key || !(key in changes)) return
+  const {newValue} = changes[key]
   emit({kind: newValue ? 'updated' : 'cleared'})
 }
 

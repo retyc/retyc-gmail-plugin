@@ -103,6 +103,10 @@ async function ensurePageWorldInjected(): Promise<void> {
 // in the Gmail header.
 let settingsSession: ActiveSession | null = null
 
+// Email of the Gmail account this tab is signed into, read from InboxSDK once it has loaded.
+// Served to the iframes through the bridge (`getCurrentUserEmail`).
+let accountEmail = ''
+
 function getOrOpenSettings(): ActiveSession {
   if (settingsSession && !settingsSession.iframe.isConnected) {
     // Stale ref (DOM removed); reset.
@@ -146,6 +150,12 @@ async function main(): Promise<void> {
     eventTracking: false,
   })
   console.log('[Retyc] InboxSDK loaded')
+
+  try {
+    accountEmail = sdk.User.getEmailAddress()
+  } catch (e) {
+    console.warn('[Retyc] User.getEmailAddress() failed', e)
+  }
 
   injectButtonStyle()
 
@@ -293,6 +303,7 @@ function openPanelSession(opts: PanelSessionOptions): ActiveSession {
     composeView: opts.composeView,
     iframe,
     iframeOrigin: IFRAME_ORIGIN,
+    getAccountEmail: () => accountEmail,
     onClose: () => {
       document.removeEventListener('keydown', onKeyDown, true)
       detachDrop()

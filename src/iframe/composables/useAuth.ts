@@ -1,6 +1,7 @@
 import {ref, computed, inject, onUnmounted, type InjectionKey} from 'vue'
 import {getSDK, invalidateSDK} from '../shared/sdk-factory'
 import {onAuthChanged} from '../shared/auth-sync'
+import {getTokenStorageKey} from '../shared/account'
 
 export type AuthState = 'loading' | 'unauthenticated' | 'device-flow' | 'authenticated'
 
@@ -28,6 +29,9 @@ export function useAuth() {
   const userCode = ref('')
 
   const isAuthenticated = computed(() => authState.value === 'authenticated')
+  // False when the content-script couldn't tell us which Gmail account this tab belongs to. Tokens
+  // are stored per account, so without it there is nowhere to persist a login.
+  const accountAvailable = getTokenStorageKey() !== null
 
   let cachedUserInfo: CachedUser | null = null
   let pollTimer: ReturnType<typeof setTimeout> | null = null
@@ -72,6 +76,7 @@ export function useAuth() {
   }
 
   async function startLogin(onAuthenticated?: () => void | Promise<void>) {
+    if (!accountAvailable) return
     invalidateSDK()
     cachedUserInfo = null
     authState.value = 'device-flow'
@@ -166,6 +171,7 @@ export function useAuth() {
     deviceFlowUrl,
     userCode,
     isAuthenticated,
+    accountAvailable,
     loadStatus,
     startLogin,
     cancelLogin,

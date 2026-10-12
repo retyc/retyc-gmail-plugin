@@ -49,7 +49,8 @@ Open Gmail. Click the **Retyc** icon in Gmail's left App Menu (the Mail / Chat /
 hidden (Chat and Meet both disabled), a floating Retyc button appears in the bottom-left corner instead. The Retyc
 settings panel opens centered on screen; click **Log in with Retyc**. A code and URL appear: open the URL in your
 browser, enter the code, and authenticate. Tokens are persisted in `browser.storage.local` so you stay logged in
-across sessions.
+across sessions. They are stored per Gmail account: with several Google accounts open in the same browser, each one
+has its own Retyc login, and logging out of one leaves the others untouched.
 
 ### 2. Send files via Retyc
 

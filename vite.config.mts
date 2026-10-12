@@ -189,11 +189,6 @@ export default defineConfig(() => ({
   resolve: {
     alias: {
       '@bridge': path.resolve(__dirname, 'src/shared/bridge'),
-      'node:buffer': 'buffer',
-      'node:stream': 'stream-browserify',
-      'node:path': path.resolve(__dirname, 'node_modules/path-browserify/index.js'),
-      'fs': path.resolve(__dirname, 'src/iframe/shims/fs.ts'),
-      'path': path.resolve(__dirname, 'node_modules/path-browserify/index.js'),
     },
   },
 
@@ -203,7 +198,7 @@ export default defineConfig(() => ({
   },
 
   optimizeDeps: {
-    include: ['buffer', 'stream-browserify', 'path-browserify'],
+    include: ['buffer'],
   },
 
   publicDir: 'public',
@@ -233,7 +228,7 @@ export default defineConfig(() => ({
           if (id.includes('age-encryption') || id.includes('jose')) return 'crypto'
           if (id.includes('@nuxt/ui') || id.includes('reka-ui')) return 'nuxt-ui'
           if (id.includes('@vue/') || id.match(/[\\/]vue[\\/]/) || id.includes('vue-i18n')) return 'vue'
-          if (id.includes('buffer') || id.includes('stream-browserify') || id.includes('path-browserify')) return 'node-shims'
+          if (id.includes('buffer')) return 'node-shims'
           if (id.includes('@inboxsdk')) return 'inboxsdk'
           return 'vendor'
         },

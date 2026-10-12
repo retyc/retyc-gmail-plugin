@@ -270,7 +270,7 @@ export function useTransfer(options: UseTransferOptions) {
         passphraseError.value = t('transfer.errors.passphraseRequired409')
         return
       }
-      if (isAuthError(msg)) {
+      if (await isAuthError(e)) {
         try {
           await (await getSDK()).auth.logout()
         } catch { /* best effort */

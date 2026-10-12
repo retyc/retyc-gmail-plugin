@@ -18,7 +18,10 @@ See our security policy and contact details at:
 ## Known limitations
 
 - Authentication tokens (access token + refresh token) are stored in `browser.storage.local`,
-  which is **per-extension, per-browser-profile, and unencrypted on disk**. Anyone with read
+  which is **per-extension, per-browser-profile, and unencrypted on disk**. Within a profile they
+  are kept under one key per Gmail account (`retyc_tokens:<account email>`), so a Retyc login on
+  one Google account is not reused by another. The account email is read from the Gmail tab and
+  only serves as a storage namespace: this separates accounts, it is not an access control. Anyone with read
   access to your browser profile directory (a malicious local process, a backup leak, an
   unsynced shared device) can extract them. Protect your account with strong authentication
   and MFA, and the token store will inherit your OS account protections.
