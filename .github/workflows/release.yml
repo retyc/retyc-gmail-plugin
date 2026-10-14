@@ -110,10 +110,29 @@ jobs:
           apiClientSecret: ${{ secrets.CHROME_CLIENT_SECRET }}
           apiRefreshToken: ${{ secrets.CHROME_REFRESH_TOKEN }}
 
+      # AMO rejects a version with blank release notes. Reuse the notes authored on the
+      # GitHub Release; fall back to a link to it when the body is empty.
+      - name: Read release notes from GitHub Release
+        id: notes
+        if: ${{ matrix.target == 'firefox' && vars.PUBLISH_FIREFOX == 'true' }}
+        run: |
+          BODY=$(gh release view "${GITHUB_REF_NAME}" --repo "${GITHUB_REPOSITORY}" --json body --jq .body)
+          if [ -z "${BODY//[[:space:]]/}" ]; then
+            BODY="See ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/releases/tag/${GITHUB_REF_NAME}"
+          fi
+          {
+            echo 'body<<RELEASE_NOTES_EOF'
+            echo "$BODY"
+            echo 'RELEASE_NOTES_EOF'
+          } >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Upload to Firefox Add-ons (AMO)
         if: ${{ matrix.target == 'firefox' && vars.PUBLISH_FIREFOX == 'true' }}
         uses: browser-actions/release-firefox-addon@v0.2.1
         with:
+          release-note: ${{ steps.notes.outputs.body }}
           addon-id: ${{ needs.release-artifacts.outputs.gecko-id }}
           addon-path: ${{ needs.release-artifacts.outputs.archive }}
           auth-api-issuer: ${{ secrets.FIREFOX_API_KEY }}
