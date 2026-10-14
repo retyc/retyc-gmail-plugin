@@ -19,6 +19,7 @@ jobs:
 
     outputs:
       archive: ${{ steps.pkg.outputs.archive }}
+      gecko-id: ${{ steps.pkg.outputs.gecko-id }}
 
     steps:
       # Minimal checkout: needed for package.json (version read) and scripts/package-zip.js.
@@ -54,6 +55,9 @@ jobs:
         run: |
           npm run package
           echo "archive=package/retyc-gmail-plugin-${VERSION}.zip" >> "$GITHUB_OUTPUT"
+          # Firefox add-on ID, single source of truth: manifest.config.ts (gecko.id), read
+          # back from the built manifest so the AMO upload can never target another add-on.
+          echo "gecko-id=$(node -p "require('./dist/manifest.json').browser_specific_settings.gecko.id")" >> "$GITHUB_OUTPUT"
 
       - name: Upload archive artifact
         uses: actions/upload-artifact@v7
@@ -61,20 +65,19 @@ jobs:
           name: extension-zip
           path: ${{ steps.pkg.outputs.archive }}
 
-      - name: Create / update GitHub Release with artifact
-        uses: softprops/action-gh-release@v3
-        with:
-          tag_name: ${{ github.ref_name }}
-          name: ${{ github.ref_name }}
-          generate_release_notes: true
-          fail_on_unmatched_files: true
-          files: ${{ steps.pkg.outputs.archive }}
+      # The release itself (title, notes) is authored by hand from the GitHub UI, which also
+      # creates the tag that triggers this workflow. We only attach the archive to it:
+      # `gh release upload` fails if the release does not exist, it never creates one.
+      - name: Upload archive to GitHub Release
+        run: gh release upload "${GITHUB_REF_NAME}" "${{ steps.pkg.outputs.archive }}" --clobber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # Single matrixed publish job: one shard per target store. Each shard runs only if
   # its corresponding `PUBLISH_<STORE>` repository variable is set to 'true' AND configures
   # the matching secrets:
   #   - chrome:  CHROME_EXTENSION_ID / CHROME_CLIENT_ID / CHROME_CLIENT_SECRET / CHROME_REFRESH_TOKEN
-  #   - firefox: FIREFOX_API_KEY / FIREFOX_API_SECRET (UUID from manifest.config.ts: browser_specific_settings.gecko.id)
+  #   - firefox: FIREFOX_API_KEY / FIREFOX_API_SECRET (add-on ID read from manifest.config.ts: gecko.id)
   publish:
     name: Publish (${{ matrix.target }})
     needs: release-artifacts
@@ -93,6 +96,9 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: extension-zip
+          # upload-artifact strips the `package/` prefix of a single file; restore it so the
+          # `archive` output (package/retyc-gmail-plugin-<version>.zip) resolves here too.
+          path: package
 
       - name: Upload to Chrome Web Store
         if: ${{ matrix.target == 'chrome' && vars.PUBLISH_CHROME == 'true' }}
@@ -108,7 +114,7 @@ jobs:
         if: ${{ matrix.target == 'firefox' && vars.PUBLISH_FIREFOX == 'true' }}
         uses: browser-actions/release-firefox-addon@v0.2.1
         with:
-          addon-id: retyc-gmail@retyc.com
+          addon-id: ${{ needs.release-artifacts.outputs.gecko-id }}
           addon-path: ${{ needs.release-artifacts.outputs.archive }}
           auth-api-issuer: ${{ secrets.FIREFOX_API_KEY }}
           auth-api-secret: ${{ secrets.FIREFOX_API_SECRET }}
