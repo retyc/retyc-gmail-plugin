@@ -6,7 +6,7 @@ import vue from '@vitejs/plugin-vue'
 import ui from '@nuxt/ui/vite'
 import {crx} from '@crxjs/vite-plugin'
 import {getIconData} from '@iconify/utils'
-import manifest from './manifest.config'
+import manifest from './manifest.config.ts'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
