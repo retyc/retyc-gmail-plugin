@@ -189,6 +189,7 @@ export default defineConfig(() => ({
   resolve: {
     alias: {
       '@bridge': path.resolve(__dirname, 'src/shared/bridge'),
+      '@iframe': path.resolve(__dirname, 'src/iframe'),
     },
   },
 
